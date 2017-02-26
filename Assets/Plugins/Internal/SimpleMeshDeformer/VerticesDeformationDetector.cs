@@ -19,17 +19,12 @@ namespace ziele3920.SimpleMeshDeformer
             }
         }
         private int detectionFrequency;
-        //[ms]
+        //[s]
         private float refreshPeriodTime;
         private Cloth cloth;
         private Vector3[] stdVertices;
         private float deformationDistanceTrigger;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="cloth"></param>
-        /// <param name="detectionFrequency">[1/s]</param>
         private void Start() {
             InitializeCloth();
             InitializeTimer();
