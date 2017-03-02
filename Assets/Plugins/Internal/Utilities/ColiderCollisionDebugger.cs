@@ -3,7 +3,7 @@
 namespace ziele3920.Utilities
 {
 
-    public class ColiderColisionDebugger : MonoBehaviour
+    public class ColiderCollisionDebugger : MonoBehaviour
     {
 
         private void OnCollisionEnter() {
