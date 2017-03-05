@@ -16,9 +16,9 @@ namespace ziele3920.SoftBody.SpringMass
         private IVerticesMapper verticesMapper;
         private ITrianglesMapper trianglesMapper;
         private Spring[] springs;
-        private Vector3[] stdFullVerticesPosition, currentCutedVerticesPosition, force, velocity;
+        private Vector3[] stdFullVerticesPosition, position, force, velocity;
         private int[] verticesMap, triangles;
-        private float defaultSiffness = 0.9f;
+        private float defaultSiffness = 1f;
 
         public SpringMassService(GameObject softBodyObject) {
             this.softBodyObject = softBodyObject;
@@ -27,14 +27,14 @@ namespace ziele3920.SoftBody.SpringMass
 
             verticesMapper = new VerticesMapper();
             stdFullVerticesPosition = meshFilter.mesh.vertices;
-            currentCutedVerticesPosition = verticesMapper.GetUsableVerticesOnly(meshFilter.mesh, out verticesMap);
-            force = new Vector3[currentCutedVerticesPosition.Length];
-            velocity = new Vector3[currentCutedVerticesPosition.Length];
+            position = verticesMapper.GetUsableVerticesOnly(meshFilter.mesh, out verticesMap);
+            force = new Vector3[position.Length];
+            velocity = new Vector3[position.Length];
 
             trianglesMapper = new TrianglesMapper();
             triangles = trianglesMapper.ParseTriangles(meshFilter.mesh, ref verticesMap);
             springs = GenerateSprings();
-
+            CountInternalForces();
         }
 
         public void OnCollisionEnter(Collision collisionInfo) {
@@ -59,7 +59,7 @@ namespace ziele3920.SoftBody.SpringMass
                 {
                     vertice1Index = triangles[i - 2],
                     vertice2Index = triangles[i - 1],
-                    stdLength = (currentCutedVerticesPosition[triangles[i - 1]] - currentCutedVerticesPosition[triangles[i - 2]]).magnitude,
+                    stdLength = (position[triangles[i - 1]] - position[triangles[i - 2]]).magnitude,
                     stiffness = defaultSiffness
                 };
 
@@ -67,7 +67,7 @@ namespace ziele3920.SoftBody.SpringMass
                 {
                     vertice1Index = triangles[i - 1],
                     vertice2Index = triangles[i],
-                    stdLength = (currentCutedVerticesPosition[triangles[i]] - currentCutedVerticesPosition[triangles[i - 1]]).magnitude,
+                    stdLength = (position[triangles[i]] - position[triangles[i - 1]]).magnitude,
                     stiffness = defaultSiffness
                 };
 
@@ -75,7 +75,7 @@ namespace ziele3920.SoftBody.SpringMass
                 {
                     vertice1Index = triangles[i],
                     vertice2Index = triangles[i - 2],
-                    stdLength = (currentCutedVerticesPosition[triangles[i - 2]] - currentCutedVerticesPosition[triangles[i]]).magnitude,
+                    stdLength = (position[triangles[i - 2]] - position[triangles[i]]).magnitude,
                     stiffness = defaultSiffness
                 };
             }
@@ -94,6 +94,16 @@ namespace ziele3920.SoftBody.SpringMass
                     (springsList[i].vertice1Index == spring.vertice1Index && springsList[i].vertice2Index == spring.vertice2Index))
                     return true;
             return false;
+        }
+
+        private void CountInternalForces() {
+            for(int i = 0; i < springs.Length; ++i) {
+                //force[springs[i].vertice2Index] -= springs[i].stiffness * ((position[springs[i].vertice1Index] - position[springs[i].vertice2Index]) - springs[i].stdLength * (position[springs[i].vertice1Index] - position[springs[i].vertice2Index]) / (position[springs[i].vertice1Index] - position[springs[i].vertice2Index]).magnitude);
+                //force[springs[i].vertice1Index] -= springs[i].stiffness * ((position[springs[i].vertice2Index] - position[springs[i].vertice1Index]) - springs[i].stdLength * (position[springs[i].vertice2Index] - position[springs[i].vertice1Index]) / (position[springs[i].vertice2Index] - position[springs[i].vertice1Index]).magnitude);
+                Vector3 forceValue = springs[i].stiffness * ((position[springs[i].vertice1Index] - position[springs[i].vertice2Index]) - springs[i].stdLength * (position[springs[i].vertice1Index] - position[springs[i].vertice2Index]) / (position[springs[i].vertice1Index] - position[springs[i].vertice2Index]).magnitude);
+                force[springs[i].vertice2Index] -= forceValue;
+                force[springs[i].vertice1Index] += forceValue;
+            }
         }
     }
 }
