@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using ziele3920.SoftBody.Vertices;
+using ziele3920.SoftBody.Mapper;
 
 namespace ziele3920.MeshTrials
 {

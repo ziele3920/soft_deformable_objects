@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using ziele3920.SoftBody.Mapper;
 
@@ -58,7 +59,7 @@ namespace ziele3920.SoftBody.SpringMass
                 {
                     vertice1Index = triangles[i - 2],
                     vertice2Index = triangles[i - 1],
-                    stdLength = (currentCutedVerticesPosition[triangles[i - 1]] = currentCutedVerticesPosition[triangles[i - 2]]).magnitude,
+                    stdLength = (currentCutedVerticesPosition[triangles[i - 1]] - currentCutedVerticesPosition[triangles[i - 2]]).magnitude,
                     stiffness = defaultSiffness
                 };
 
@@ -66,7 +67,7 @@ namespace ziele3920.SoftBody.SpringMass
                 {
                     vertice1Index = triangles[i - 1],
                     vertice2Index = triangles[i],
-                    stdLength = (currentCutedVerticesPosition[triangles[i]] = currentCutedVerticesPosition[triangles[i - 1]]).magnitude,
+                    stdLength = (currentCutedVerticesPosition[triangles[i]] - currentCutedVerticesPosition[triangles[i - 1]]).magnitude,
                     stiffness = defaultSiffness
                 };
 
@@ -74,11 +75,25 @@ namespace ziele3920.SoftBody.SpringMass
                 {
                     vertice1Index = triangles[i],
                     vertice2Index = triangles[i - 2],
-                    stdLength = (currentCutedVerticesPosition[triangles[i - 2]] = currentCutedVerticesPosition[triangles[i]]).magnitude,
+                    stdLength = (currentCutedVerticesPosition[triangles[i - 2]] - currentCutedVerticesPosition[triangles[i]]).magnitude,
                     stiffness = defaultSiffness
                 };
             }
-            return newSprings;
+            List<Spring> newSpringsWithoutDubled = new List<Spring>();
+            for(int i = 0; i < newSprings.Length; ++i) {
+                if (ListContainSpring(newSpringsWithoutDubled, newSprings[i]))
+                    continue;
+                newSpringsWithoutDubled.Add(newSprings[i]);
+            }
+            return newSpringsWithoutDubled.ToArray();
+        }
+
+        private bool ListContainSpring(List<Spring> springsList, Spring spring) {
+            for(int i = 0; i < springsList.Count; ++i) 
+                if ((springsList[i].vertice1Index == spring.vertice2Index && springsList[i].vertice2Index == spring.vertice1Index) ||
+                    (springsList[i].vertice1Index == spring.vertice1Index && springsList[i].vertice2Index == spring.vertice2Index))
+                    return true;
+            return false;
         }
     }
 }
