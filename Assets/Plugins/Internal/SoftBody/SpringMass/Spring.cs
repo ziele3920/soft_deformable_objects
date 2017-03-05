@@ -2,7 +2,7 @@
 {
     public struct Spring
     {
-        public int vertice1, vertice2;
+        public int vertice1Index, vertice2Index;
         public float stdLength;
         public float stiffness;
     }

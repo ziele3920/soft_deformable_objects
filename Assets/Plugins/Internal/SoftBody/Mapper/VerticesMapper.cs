@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace ziele3920.SoftBody.Vertices
+namespace ziele3920.SoftBody.Mapper
 {
     public class VerticesMapper : IVerticesMapper
     {
@@ -21,7 +21,7 @@ namespace ziele3920.SoftBody.Vertices
             return usableVerices.ToArray();
         }
 
-        public Vector3[] GetOriginalVertices(Vector3[] independentVertices, int[] vericesMap) {
+        public Vector3[] GetOriginalVertices(ref Vector3[] independentVertices, ref int[] vericesMap) {
             Vector3[] originalVertices = new Vector3[vericesMap.Length];
 
             for (int i = 0; i < vericesMap.Length; ++i)
