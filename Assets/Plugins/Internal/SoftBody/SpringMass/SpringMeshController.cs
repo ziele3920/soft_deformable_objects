@@ -7,9 +7,19 @@ namespace ziele3920.SoftBody.SpringMass
     public class SpringMeshController : MonoBehaviour
     {
         private ISpringMassService springMassService;
+        private MeshFilter meshFiter;
+        private MeshCollider collider;
         
         private void Start() {
+            meshFiter = GetComponent<MeshFilter>();
             springMassService = new SpringMassService(this.gameObject);
+            collider = GetComponent<MeshCollider>();
+        }
+
+        private void Update() {
+            meshFiter.mesh.vertices = springMassService.CurrentVerticesPosition;
+            meshFiter.mesh.RecalculateNormals();
+            collider.sharedMesh = meshFiter.mesh;
         }
 
         private void OnCollisionEnter(Collision collisionInfo) {
@@ -25,6 +35,10 @@ namespace ziele3920.SoftBody.SpringMass
         private void OnCollisionExit(Collision collisionInfo) {
             Debug.Log("colision exit");
             springMassService.OnCollisionExit(collisionInfo);
+        }
+
+        private void OnDestroy() {
+            springMassService.Dispose();
         }
 
     }

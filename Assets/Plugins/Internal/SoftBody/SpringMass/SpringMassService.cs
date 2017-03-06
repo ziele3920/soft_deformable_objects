@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using ziele3920.SoftBody.Mapper;
 
@@ -9,8 +10,11 @@ namespace ziele3920.SoftBody.SpringMass
     public class SpringMassService : ISpringMassService
     {
 
+        public Vector3[] CurrentVerticesPosition { get; private set; }
+
         private GameObject softBodyObject;
         private MeshFilter meshFilter;
+        private Mesh mesh;
         private MeshRenderer meshRenderer;
 
         private IVerticesMapper verticesMapper;
@@ -19,49 +23,58 @@ namespace ziele3920.SoftBody.SpringMass
         private Vector3[] stdFullVerticesPosition, position, force, velocity;
         private int[] verticesMap, triangles;
         private float defaultSiffness = 1f;
-        private float deltaTime, pointMass;
+        private float pointMass = 0.01f;
+        private int deltaTime = 10;
+        private Thread updatePosLoopThread;
 
         public SpringMassService(GameObject softBodyObject) {
             this.softBodyObject = softBodyObject;
             meshFilter = softBodyObject.GetComponent<MeshFilter>();
+            mesh = meshFilter.mesh;
             meshRenderer = softBodyObject.GetComponent<MeshRenderer>();
 
             verticesMapper = new VerticesMapper();
-            stdFullVerticesPosition = meshFilter.mesh.vertices;
-            position = verticesMapper.GetUsableVerticesOnly(meshFilter.mesh, out verticesMap);
+            stdFullVerticesPosition = mesh.vertices;
+            position = verticesMapper.GetUsableVerticesOnly(mesh, out verticesMap);
             force = new Vector3[position.Length];
             velocity = new Vector3[position.Length];
 
             trianglesMapper = new TrianglesMapper();
-            triangles = trianglesMapper.ParseTriangles(meshFilter.mesh, ref verticesMap);
+            triangles = trianglesMapper.ParseTriangles(mesh, ref verticesMap);
 
             ISpringsMapper springsMapper = new SpringsMapper();
             springs = springsMapper.GenerateSprings(ref triangles, ref position, defaultSiffness);
-            CountInternalForces();
+
+            CurrentVerticesPosition = stdFullVerticesPosition;
+
+            updatePosLoopThread = new Thread(new ThreadStart(UpdatePosition));
+            updatePosLoopThread.Start();
+
         }
 
         public void OnCollisionEnter(Collision collisionInfo) {
-            //collisionInfo.contacts[0].
+            float forceToAdd = 1f;
+            for(int i = 0; i < collisionInfo.contacts.Length; ++i) 
+                AddForceToVertex(GetNearestCollisionVertex(collisionInfo.contacts[i].point), collisionInfo.contacts[i].normal * forceToAdd);
         }
 
         public void OnCollisionExit(Collision collisionInfo) {
-            throw new NotImplementedException();
+
         }
 
         public void OnCollisionStay(Collision collisionInfo) {
             foreach (ContactPoint contact in collisionInfo.contacts) {
-               // print(contact.thisCollider.name + " hit " + contact.otherCollider.name);
+
                 Debug.DrawRay(contact.point, contact.normal, Color.white);
             }
         }
 
         public void Dispose() {
-            throw new NotImplementedException();
+            updatePosLoopThread.Abort();
         }
 
         private void UpdateMeshAndCollider() {
-            meshFilter.mesh.vertices = verticesMapper.GetOriginalVertices(ref position, ref verticesMap);
-            meshFilter.mesh.RecalculateNormals();
+            CurrentVerticesPosition = verticesMapper.GetOriginalVertices(ref position, ref verticesMap);
         }
 
         private void CountInternalForces() {
@@ -75,11 +88,33 @@ namespace ziele3920.SoftBody.SpringMass
         }
 
         private void UpdatePosition() {
-            for (int i = 0; i < position.Length; ++i) {
-                Vector3 acceleration = force[i] / pointMass;
-                velocity[i] += deltaTime * acceleration;
-                position[i] += deltaTime * velocity[i];
+            while (true) {
+                CountInternalForces();
+                for (int i = 0; i < position.Length; ++i) {
+                    Vector3 acceleration = force[i] / pointMass;
+                    velocity[i] += deltaTime/1000f * acceleration;
+                    position[i] += deltaTime/1000f * velocity[i];
+                }
+                UpdateMeshAndCollider();
+                Thread.Sleep(deltaTime);
             }
+        }
+
+        private void AddForceToVertex(int vertexIndex, Vector3 forceToAdd) {
+            this.force[vertexIndex] += forceToAdd;
+        }
+
+        private int GetNearestCollisionVertex(Vector3 hitGlobalPos) {
+            Vector3 localHitPos = softBodyObject.transform.InverseTransformPoint(hitGlobalPos);
+            float minDis = float.MaxValue;
+            int closestVertexIndex = -1;
+
+            for(int i = 0; i < position.Length; ++i)
+                if((localHitPos - position[i]).magnitude < minDis) {
+                    minDis = (localHitPos - position[i]).magnitude;
+                    closestVertexIndex = i;
+                }
+            return closestVertexIndex;
         }
 
     }
