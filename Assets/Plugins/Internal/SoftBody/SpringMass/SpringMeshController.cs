@@ -13,15 +13,18 @@ namespace ziele3920.SoftBody.SpringMass
         }
 
         private void OnCollisionEnter(Collision collisionInfo) {
+            Debug.Log("colision enter");
             springMassService.OnCollisionEnter(collisionInfo);
         }
 
         private void OnCollisionStay(Collision collisionInfo) {
-            springMassService.OnCollisionEnter(collisionInfo);
+            Debug.Log("colision stay");
+            springMassService.OnCollisionStay(collisionInfo);
         }
 
         private void OnCollisionExit(Collision collisionInfo) {
-            springMassService.OnCollisionEnter(collisionInfo);
+            Debug.Log("colision exit");
+            springMassService.OnCollisionExit(collisionInfo);
         }
 
     }

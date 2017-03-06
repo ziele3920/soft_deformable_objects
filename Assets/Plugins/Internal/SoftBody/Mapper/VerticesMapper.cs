@@ -11,7 +11,7 @@ namespace ziele3920.SoftBody.Mapper
 
             int vertColeration;
             for(int i = 0; i < mesh.vertices.Length; ++i) {
-                if ((vertColeration = IsDubledVertex(mesh.vertices, i)) == -1) {
+                if ((vertColeration = IsDubledVertex(mesh.vertices, usableVerices, i)) == -1) {
                     usableVerices.Add(mesh.vertices[i]);
                     verticesMap[i] = usableVerices.Count - 1;
                     continue;
@@ -30,9 +30,9 @@ namespace ziele3920.SoftBody.Mapper
             return originalVertices;
         }
 
-        private int IsDubledVertex(Vector3[] vertices, int index) {
-            for (int i = 0; i < index; ++i)
-                if (vertices[i] == vertices[index])
+        private int IsDubledVertex(Vector3[] meshVertices, List<Vector3> usableVertices, int index) {
+            for (int i = 0; i < usableVertices.Count; ++i)
+                if (usableVertices[i] == meshVertices[index])
                     return i;
             return -1;
         }

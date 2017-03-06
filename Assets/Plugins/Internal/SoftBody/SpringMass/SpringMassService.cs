@@ -19,6 +19,7 @@ namespace ziele3920.SoftBody.SpringMass
         private Vector3[] stdFullVerticesPosition, position, force, velocity;
         private int[] verticesMap, triangles;
         private float defaultSiffness = 1f;
+        private float deltaTime, pointMass;
 
         public SpringMassService(GameObject softBodyObject) {
             this.softBodyObject = softBodyObject;
@@ -33,12 +34,14 @@ namespace ziele3920.SoftBody.SpringMass
 
             trianglesMapper = new TrianglesMapper();
             triangles = trianglesMapper.ParseTriangles(meshFilter.mesh, ref verticesMap);
-            springs = GenerateSprings();
+
+            ISpringsMapper springsMapper = new SpringsMapper();
+            springs = springsMapper.GenerateSprings(ref triangles, ref position, defaultSiffness);
             CountInternalForces();
         }
 
         public void OnCollisionEnter(Collision collisionInfo) {
-            throw new NotImplementedException();
+            //collisionInfo.contacts[0].
         }
 
         public void OnCollisionExit(Collision collisionInfo) {
@@ -46,54 +49,19 @@ namespace ziele3920.SoftBody.SpringMass
         }
 
         public void OnCollisionStay(Collision collisionInfo) {
-            throw new NotImplementedException();
+            foreach (ContactPoint contact in collisionInfo.contacts) {
+               // print(contact.thisCollider.name + " hit " + contact.otherCollider.name);
+                Debug.DrawRay(contact.point, contact.normal, Color.white);
+            }
         }
 
         public void Dispose() {
             throw new NotImplementedException();
         }
-        private Spring[] GenerateSprings() {
-            Spring[] newSprings = new Spring[triangles.Length];
-            for (int i = 2; i < triangles.Length; i += 3) {
-                newSprings[i - 2] = new Spring
-                {
-                    vertice1Index = triangles[i - 2],
-                    vertice2Index = triangles[i - 1],
-                    stdLength = (position[triangles[i - 1]] - position[triangles[i - 2]]).magnitude,
-                    stiffness = defaultSiffness
-                };
 
-                newSprings[i - 1] = new Spring
-                {
-                    vertice1Index = triangles[i - 1],
-                    vertice2Index = triangles[i],
-                    stdLength = (position[triangles[i]] - position[triangles[i - 1]]).magnitude,
-                    stiffness = defaultSiffness
-                };
-
-                newSprings[i] = new Spring
-                {
-                    vertice1Index = triangles[i],
-                    vertice2Index = triangles[i - 2],
-                    stdLength = (position[triangles[i - 2]] - position[triangles[i]]).magnitude,
-                    stiffness = defaultSiffness
-                };
-            }
-            List<Spring> newSpringsWithoutDubled = new List<Spring>();
-            for(int i = 0; i < newSprings.Length; ++i) {
-                if (ListContainSpring(newSpringsWithoutDubled, newSprings[i]))
-                    continue;
-                newSpringsWithoutDubled.Add(newSprings[i]);
-            }
-            return newSpringsWithoutDubled.ToArray();
-        }
-
-        private bool ListContainSpring(List<Spring> springsList, Spring spring) {
-            for(int i = 0; i < springsList.Count; ++i) 
-                if ((springsList[i].vertice1Index == spring.vertice2Index && springsList[i].vertice2Index == spring.vertice1Index) ||
-                    (springsList[i].vertice1Index == spring.vertice1Index && springsList[i].vertice2Index == spring.vertice2Index))
-                    return true;
-            return false;
+        private void UpdateMeshAndCollider() {
+            meshFilter.mesh.vertices = verticesMapper.GetOriginalVertices(ref position, ref verticesMap);
+            meshFilter.mesh.RecalculateNormals();
         }
 
         private void CountInternalForces() {
@@ -105,5 +73,14 @@ namespace ziele3920.SoftBody.SpringMass
                 force[springs[i].vertice1Index] += forceValue;
             }
         }
+
+        private void UpdatePosition() {
+            for (int i = 0; i < position.Length; ++i) {
+                Vector3 acceleration = force[i] / pointMass;
+                velocity[i] += deltaTime * acceleration;
+                position[i] += deltaTime * velocity[i];
+            }
+        }
+
     }
 }
