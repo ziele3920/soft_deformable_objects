@@ -24,7 +24,7 @@ namespace ziele3920.SoftBody.SpringMass
         private int[] verticesMap, triangles;
         private float defaultSiffness = 1f;
         private float pointMass = 0.01f;
-        private int deltaTime = 10;
+        private int deltaTime = 20;
         private Thread updatePosLoopThread;
 
         public SpringMassService(GameObject softBodyObject) {
@@ -53,7 +53,7 @@ namespace ziele3920.SoftBody.SpringMass
         }
 
         public void OnCollisionEnter(Collision collisionInfo) {
-            float forceToAdd = 1f;
+            float forceToAdd = 0.1f;
             for(int i = 0; i < collisionInfo.contacts.Length; ++i) 
                 AddForceToVertex(GetNearestCollisionVertex(collisionInfo.contacts[i].point), collisionInfo.contacts[i].normal * forceToAdd);
         }
@@ -63,10 +63,10 @@ namespace ziele3920.SoftBody.SpringMass
         }
 
         public void OnCollisionStay(Collision collisionInfo) {
-            foreach (ContactPoint contact in collisionInfo.contacts) {
+          //  foreach (ContactPoint contact in collisionInfo.contacts) {
 
-                Debug.DrawRay(contact.point, contact.normal, Color.white);
-            }
+             //   Debug.DrawRay(contact.point, contact.normal, Color.white);
+           // }
         }
 
         public void Dispose() {
@@ -82,8 +82,10 @@ namespace ziele3920.SoftBody.SpringMass
                 //force[springs[i].vertice2Index] -= springs[i].stiffness * ((position[springs[i].vertice1Index] - position[springs[i].vertice2Index]) - springs[i].stdLength * (position[springs[i].vertice1Index] - position[springs[i].vertice2Index]) / (position[springs[i].vertice1Index] - position[springs[i].vertice2Index]).magnitude);
                 //force[springs[i].vertice1Index] -= springs[i].stiffness * ((position[springs[i].vertice2Index] - position[springs[i].vertice1Index]) - springs[i].stdLength * (position[springs[i].vertice2Index] - position[springs[i].vertice1Index]) / (position[springs[i].vertice2Index] - position[springs[i].vertice1Index]).magnitude);
                 Vector3 forceValue = springs[i].stiffness * ((position[springs[i].vertice1Index] - position[springs[i].vertice2Index]) - springs[i].stdLength * (position[springs[i].vertice1Index] - position[springs[i].vertice2Index]) / (position[springs[i].vertice1Index] - position[springs[i].vertice2Index]).magnitude);
-                force[springs[i].vertice2Index] -= forceValue;
-                force[springs[i].vertice1Index] += forceValue;
+                //if (forceValue.magnitude < 0.00000000001f)
+                 //   forceValue = Vector3.zero;
+                force[springs[i].vertice2Index] += forceValue;
+                force[springs[i].vertice1Index] -= forceValue;
             }
         }
 
@@ -94,6 +96,10 @@ namespace ziele3920.SoftBody.SpringMass
                     Vector3 acceleration = force[i] / pointMass;
                     velocity[i] += deltaTime/1000f * acceleration;
                     position[i] += deltaTime/1000f * velocity[i];
+                }
+                for (int i = 0; i < force.Length; ++i) {
+                    force[i] = Vector3.zero;
+                    velocity[i] = Vector3.zero;
                 }
                 UpdateMeshAndCollider();
                 Thread.Sleep(deltaTime);

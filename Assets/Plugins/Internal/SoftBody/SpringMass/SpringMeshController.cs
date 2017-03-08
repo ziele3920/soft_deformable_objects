@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ziele3920.SoftBody.SpringMass
 {
-    [RequireComponent(typeof(Collider), typeof(MeshFilter))]
+    [RequireComponent(typeof(MeshCollider), typeof(MeshFilter))]
     public class SpringMeshController : MonoBehaviour
     {
         private ISpringMassService springMassService;
@@ -23,21 +23,22 @@ namespace ziele3920.SoftBody.SpringMass
         }
 
         private void OnCollisionEnter(Collision collisionInfo) {
-            Debug.Log("colision enter");
+            //Debug.Log("colision enter");
             springMassService.OnCollisionEnter(collisionInfo);
         }
 
         private void OnCollisionStay(Collision collisionInfo) {
-            Debug.Log("colision stay");
+            ///Debug.Log("colision stay");
             springMassService.OnCollisionStay(collisionInfo);
         }
 
         private void OnCollisionExit(Collision collisionInfo) {
-            Debug.Log("colision exit");
+            //Debug.Log("colision exit");
             springMassService.OnCollisionExit(collisionInfo);
         }
 
         private void OnDestroy() {
+            if(springMassService != null)
             springMassService.Dispose();
         }
 
