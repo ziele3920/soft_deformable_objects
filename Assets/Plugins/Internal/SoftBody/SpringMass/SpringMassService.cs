@@ -22,9 +22,9 @@ namespace ziele3920.SoftBody.SpringMass
         private Spring[] springs;
         private Vector3[] stdPosition, position, force, velocity;
         private int[] verticesMap, triangles;
-        private float defaultSiffness = 3f;
-        private float pointMass = 0.01f;
-        private int deltaTime = 20;
+        private float defaultSiffness = 5f;
+        private float pointMass = 0.013f;
+        private int deltaTime = 9;
         private Thread updatePosLoopThread;
         private bool isHiting = false;
 
@@ -62,7 +62,7 @@ namespace ziele3920.SoftBody.SpringMass
         }
 
         public void OnCollisionEnter(Collision collisionInfo) {
-            float forceToAdd = 0.2f;
+            float forceToAdd = 1f;
             for(int i = 0; i < collisionInfo.contacts.Length; ++i) 
                 AddForceToVertex(GetNearestCollisionVertex(collisionInfo.contacts[i].point), collisionInfo.contacts[i].normal * forceToAdd);
             isHiting = true;
